@@ -9,14 +9,13 @@
 
   outputs = { self, nixpkgs, flake-utils, ... }:
     let
-      # Define the overlay once, outside of eachDefaultSystem
+      # Define the overlay once
       overlay = import ./overlay.nix;
     in
     {
-      # Export the overlay at the top level
+      # Export the overlay at the top level for NixOS to use
       overlays.default = overlay;
 
-      # Also export per-system packages
     } // flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
@@ -24,31 +23,13 @@
           config.allowUnfree = true;
           overlays = [ overlay ];
         };
-
-        # Auto-discover all packages in ./pkgs directory
-        callPackage = path: pkgs.callPackage path { };
-
-        # Define all custom packages here
-        packageNames = [
-          "bcompare4"
-          # Add new packages here as you create them
-          # "another-package"
-          # "yet-another-package"
-        ];
-
-        # Create package set
-        customPackages = builtins.listToAttrs (map (name: {
-          name = name;
-          value = callPackage (./pkgs/${name}) { };
-        }) packageNames);
-
       in
       {
-        # Export each package individually
-        packages = customPackages // {
-          # Also provide 'all' and 'default' convenience attributes
-          all = builtins.attrValues customPackages;
-          default = customPackages.bcompare4; # or first package as default
+        # Export packages
+        packages = {
+          bcompare4 = pkgs.bcompare4;
+          # Add more packages here as you create them:
+          # another-package = pkgs.another-package;
         };
       }
     );
