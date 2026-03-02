@@ -7,16 +7,19 @@
 , glibc
 , pango
 , gtk2
-, kcoreaddons
-, ki18n
-, kio
-, kservice
+, kdePackages
 , stdenv
 , runtimeShell
 , unzip
 }:
 
 let
+  # Extract KDE packages from kdePackages
+  kcoreaddons = kdePackages.kcoreaddons;
+  ki18n = kdePackages.ki18n;
+  kio = kdePackages.kio;
+  kservice = kdePackages.kservice;
+
   pname = "bcompare4";
   version = "4.4.7.28397";
 
