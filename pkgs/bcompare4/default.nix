@@ -7,18 +7,18 @@
 , glibc
 , pango
 , gtk2
-, kdePackages
+, libsForQt5
 , stdenv
 , runtimeShell
 , unzip
 }:
 
 let
-  # Extract KDE packages from kdePackages
-  kcoreaddons = kdePackages.kcoreaddons;
-  ki18n = kdePackages.ki18n;
-  kio = kdePackages.kio;
-  kservice = kdePackages.kservice;
+  # Extract KDE packages from libsForQt5
+  kcoreaddons = libsForQt5.kcoreaddons;
+  ki18n = libsForQt5.ki18n;
+  kio = libsForQt5.kio;
+  kservice = libsForQt5.kservice;
 
   pname = "bcompare4";
   version = "4.4.7.28397";
