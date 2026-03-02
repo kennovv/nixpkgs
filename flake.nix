@@ -8,11 +8,21 @@
   };
 
   outputs = { self, nixpkgs, flake-utils, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
+    let
+      # Define the overlay once, outside of eachDefaultSystem
+      overlay = import ./overlay.nix;
+    in
+    {
+      # Export the overlay at the top level
+      overlays.default = overlay;
+
+      # Also export per-system packages
+    } // flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
           inherit system;
           config.allowUnfree = true;
+          overlays = [ overlay ];
         };
 
         # Auto-discover all packages in ./pkgs directory
@@ -40,12 +50,6 @@
           all = builtins.attrValues customPackages;
           default = customPackages.bcompare4; # or first package as default
         };
-
-        # Export the overlay (this is what we'll use in NixOS)
-        overlays.default = import ./overlay.nix;
-
-        # Also export the packages as a separate overlay
-        overlays.packages = final: prev: customPackages;
       }
     );
 
