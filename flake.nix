@@ -3,7 +3,8 @@
   description = "Custom Nix packages";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    # Don't pin to a specific NixOS version - let the consumer decide
+    nixpkgs.url = "github:NixOS/nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
