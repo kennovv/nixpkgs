@@ -8,6 +8,7 @@
   stdenv,
   runtimeShell,
   unzip,
+  gtk2,
 }:
 
 let
@@ -77,6 +78,7 @@ EOF
       kdePackages.ki18n
       kdePackages.kcoreaddons
       bzip2
+      gtk2
     ];
 
     dontBuild = true;
