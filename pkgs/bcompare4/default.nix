@@ -1,25 +1,16 @@
-{ lib
-, autoPatchelfHook
-, bzip2
-, cairo
-, fetchurl
-, gdk-pixbuf
-, glibc
-, pango
-, gtk2
-, libsForQt5
-, stdenv
-, runtimeShell
-, unzip
+{
+  lib,
+  autoPatchelfHook,
+  bzip2,
+  fetchurl,
+  glibc,
+  kdePackages,
+  stdenv,
+  runtimeShell,
+  unzip,
 }:
 
 let
-  # Extract KDE packages from libsForQt5
-  kcoreaddons = libsForQt5.kcoreaddons;
-  ki18n = libsForQt5.ki18n;
-  kio = libsForQt5.kio;
-  kservice = libsForQt5.kservice;
-
   pname = "bcompare4";
   version = "4.4.7.28397";
 
@@ -27,12 +18,12 @@ let
 
   srcs = {
     x86_64-linux = fetchurl {
-      url = "https://www.scootersoftware.com/bcompare-${version}_amd64.deb";
+      url = "https://www.scootersoftware.com/files/bcompare-${version}_amd64.deb";
       sha256 = "sha256-4AWTSoYpVhGmBBxcwHXdg1CGd/04+8yL9pu+gHrsj6U";
     };
 
     x86_64-darwin = fetchurl {
-      url = "https://www.scootersoftware.com/BCompareOSX-${version}.zip";
+      url = "https://www.scootersoftware.com/files/BCompareOSX-${version}.zip";
       sha256 = "sha256-qbpM6hJbv+APo+ed45k3GXrl1HnZRxD1uT2lvaN3oM4=";
     };
 
@@ -48,7 +39,6 @@ let
       src
       meta
       ;
-
     unpackPhase = ''
       ar x $src
       tar xfz data.tar.gz
@@ -60,15 +50,15 @@ let
       cp -R usr/{bin,lib,share} $out/
 
       # Remove library that refuses to be autoPatchelf'ed
-      rm -f $out/lib/beyondcompare/ext/bcompare_ext_kde.amd64.so
+      #  - bcompare_ext_kde.amd64.so is linked with Qt4
+      #  - bcompare_ext_kde5.amd64.so is linked with Qt5
+      rm $out/lib/beyondcompare/ext/bcompare_ext_kde.amd64.so
+      rm $out/lib/beyondcompare/ext/bcompare_ext_kde5.amd64.so
 
       substituteInPlace $out/bin/bcompare \
         --replace "/usr/lib/beyondcompare" "$out/lib/beyondcompare" \
         --replace "ldd" "${glibc.bin}/bin/ldd" \
         --replace "/bin/bash" "${runtimeShell}"
-
-      # Create symlink for bzip2 library
-      ln -sf ${bzip2.out}/lib/libbz2.so.1 $out/lib/beyondcompare/libbz2.so.1.0
 
       # Create a wrapper script for bcompare4 to avoid conflicts
       cat > $out/bin/bcompare4 << EOF
@@ -82,20 +72,19 @@ EOF
 
     buildInputs = [
       (lib.getLib stdenv.cc.cc)
-      gtk2
-      pango
-      cairo
-      kio
-      kservice
-      ki18n
-      kcoreaddons
-      gdk-pixbuf
+      kdePackages.kio
+      kdePackages.kservice
+      kdePackages.ki18n
+      kdePackages.kcoreaddons
       bzip2
     ];
 
     dontBuild = true;
     dontConfigure = true;
     dontWrapQtApps = true;
+
+    __structuredAttrs = true;
+    strictDeps = true;
   };
 
   darwin = stdenv.mkDerivation {
@@ -105,7 +94,6 @@ EOF
       src
       meta
       ;
-
     nativeBuildInputs = [ unzip ];
 
     installPhase = ''
@@ -118,9 +106,12 @@ open $out/Applications/BCompare.app "\$@"
 EOF
       chmod +x $out/bin/bcompare4
     '';
+
+    __structuredAttrs = true;
+    strictDeps = true;
   };
 
-  meta = with lib; {
+  meta = {
     description = "GUI application that allows to quickly and easily compare files and folders";
     longDescription = ''
       Beyond Compare is focused. Beyond Compare allows you to quickly and easily compare your files and folders.
@@ -128,9 +119,9 @@ EOF
       You can then merge the changes, synchronize your files, and generate reports for your records.
     '';
     homepage = "https://www.scootersoftware.com";
-    sourceProvenance = with sourceTypes; [ binaryNativeCode ];
-    license = licenses.unfree;
-    maintainers = with maintainers; [ ];
+    sourceProvenance = with lib.sourceTypes; [ binaryNativeCode ];
+    license = lib.licenses.unfree;
+    maintainers = with lib.maintainers; [ ];
     platforms = builtins.attrNames srcs;
     mainProgram = "bcompare4";
   };
